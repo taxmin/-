@@ -11,3 +11,6 @@ python-3.8.10-amd64.exe
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Local developer scripts (do not commit)
+一键更新.bat
