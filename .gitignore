@@ -2,6 +2,89 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyo
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# Local developer scripts (do not commit)
+# Virtual environments (local only)
+venv/
+env/
+ENV/
+.env
+.venv
+Python38Portable/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Local developer scripts and configs (do not commit)
 一键更新.bat
+*.local
+*.local.json
+config.local.py
+
+# Logs and temporary files
+*.log
+logs/
+temp/
+tmp/
+*.tmp
+*.temp
+
+# Screenshots and test outputs
+截图/
+result_img/
+test_output.txt
+*.jpg
+*.png
+*.jpeg
+!资源/图片/**/*.png  # 保留资源目录下的必要图片（如有）
+!资源/图片/**/*.jpg  # 保留资源目录下的必要图片（如有）
+
+# OCR and model cache
+onnxocr/models/
+onnxocr/result_img/
+*.onnx
+*.pb
+*.pth
+*.pt
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Windows specific
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# Git ignore itself if needed
+# .gitignore
