@@ -44,8 +44,8 @@ class WinGUI(Tk):
         self.tk_tab_performance = Frame(self.tk_notebook)
         self.tk_notebook.add(self.tk_tab_performance, text='📊 性能监控')
         
-        # 现在可以创建表格了（使用已存在的 tk_tab_main）
-        self.tk_table_m1ap2ahd = self.__tk_table_m1ap2ahd(self.tk_tab_main)
+        # 现在可以创建表格了（放在左侧表格容器内）
+        self.tk_table_m1ap2ahd = self.__tk_table_m1ap2ahd(self.tk_table_frame)
         self.start_log_monitor()
         
         # 填充性能监控页面内容
@@ -270,6 +270,11 @@ class WinGUI(Tk):
         self.tk_tab_main.grid_columnconfigure(0, weight=4)
         self.tk_tab_main.grid_columnconfigure(1, weight=1)
         self.tk_tab_main.grid_columnconfigure(2, weight=2)
+
+        self.tk_table_frame = LabelFrame(self.tk_tab_main, text="任务列表", padx=4, pady=4)
+        self.tk_table_frame.grid(row=0, column=0, sticky="nsew", padx=(0, 6), pady=2)
+        self.tk_table_frame.grid_rowconfigure(0, weight=1)
+        self.tk_table_frame.grid_columnconfigure(0, weight=1)
 
         # 中间快捷操作区（位于任务列表和实时日志之间）
         self.tk_quick_action_frame = LabelFrame(self.tk_tab_main, text="快捷操作（按钮 / 右键菜单）", padx=6, pady=6)
@@ -736,12 +741,17 @@ class WinGUI(Tk):
         self.destroy()
     def __tk_table_m1ap2ahd(self,parent):
         # 表头字段 表头宽度
-        columns = {"ID":29,"名称":50,"账号/密码":120,"-":0,"任务状态":80,"金币":60,"状态":119}
+        columns = {"ID":29,"名称":50,"账号/密码":120,"任务状态":80,"金币":60,"状态":119}
         tk_table = Treeview(parent, show="headings", columns=list(columns))
         for text, width in columns.items():  # 批量设置列属性
             tk_table.heading(text, text=text, anchor='center')
-            # 允许列在窗口拉伸时自适应，避免右侧大面积空白
-            tk_table.column(text, anchor='center', width=width, stretch=True)
+            # 固定列宽，内容过长时可通过横向滚动条查看
+            tk_table.column(text, anchor='center', width=width, stretch=False)
+
+        h_scrollbar = Scrollbar(parent, orient="horizontal", command=tk_table.xview)
+        tk_table.configure(xscrollcommand=h_scrollbar.set)
+        tk_table.grid(row=0, column=0, sticky="nsew")
+        h_scrollbar.grid(row=1, column=0, sticky="ew")
         
         # 🔧 新增：配置金币列的色彩样式（金黄色，突出显示）
         tk_table.tag_configure('gold_highlight', background='#FFF9E6', foreground='#FF8C00')  # 浅黄背景+橙色文字
