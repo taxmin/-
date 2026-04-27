@@ -1,0 +1,22 @@
+================================================================================
+VMware 多层级窗口句柄查找测试
+================================================================================
+
+
+================================================================================
+测试端口: 5600
+================================================================================
+
+Traceback (most recent call last):
+  File "test_vmware_real_window.py", line 34, in test_find_real_window
+    print(f"\n\u2705 成功！端口 {port} 的真实窗口句柄: {real_hwnd}")
+UnicodeEncodeError: 'gbk' codec can't encode character '\u2705' in position 2: illegal multibyte sequence
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "test_vmware_real_window.py", line 69, in <module>
+    test_find_real_window()
+  File "test_vmware_real_window.py", line 57, in test_find_real_window
+    print(f"\n\u274c 异常: {e}")
+UnicodeEncodeError: 'gbk' codec can't encode character '\u274c' in position 2: illegal multibyte sequence

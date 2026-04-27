@@ -1,0 +1,37 @@
+# ============================================
+# dx多开框架 - Python 依赖包列表（一键安装）
+# ============================================
+# 安装: pip install -r requirement.txt -i https://mirrors.aliyun.com/pypi/simple
+# 或双击: install_env.bat / 执行 install_env.ps1
+# Python: 3.8.x (推荐 3.8.8)
+# ============================================
+
+# ---------- 图像与视觉 ----------
+opencv-python>=4.5.0
+opencv-contrib-python>=4.5.0
+numpy>=1.19.0,<2.0.0
+Pillow>=8.0.0
+
+# ---------- VNC 远程控制 ----------
+vncdotool>=1.0.0
+
+# ---------- Windows / COM ----------
+comtypes>=1.1.0
+pywin32>=300
+
+# ---------- OCR 识别 ----------
+# 当前主流程: ONNX OCR（dxGame/dx_OnnxOCR.py）
+# 说明:
+# 1) 需额外准备 OnnxOCR 源码目录，并设置环境变量 ONNXOCR_PATH（或放到项目约定目录）
+# 2) onnxruntime 为 ONNX 推理引擎
+onnxruntime>=1.16.0,<2.0.0
+
+# 兼容/备用 OCR（脚本中仍有检查逻辑，可按需保留）
+pytesseract>=0.3.10
+easyocr>=1.7.0
+
+# ---------- 剪贴板与工具 ----------
+pyperclip>=1.8.0
+
+# ---------- 打包用（可选） ----------
+# auto-py-to-exe>=2.0.0

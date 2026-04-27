@@ -1,0 +1,13 @@
+# 便携方案（方案 A）虚拟环境
+.venv/
+
+# 绿色完整 Python（setup_python_portable.bat 安装到本目录）
+Python38Portable/
+
+# 安装包缓存（可删）
+python-3.8.10-amd64.exe
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class

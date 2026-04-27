@@ -1,0 +1,12 @@
+# dx多开框架 - 项目配置
+# 用于统一各 IDE（PyCharm/Cursor/VSCode）的 Python 解释器选择
+[project]
+name = "dx多开框架"
+version = "1.0.0"
+description = "游戏自动化多开框架，支持VNC、OCR、图像识别"
+requires-python = ">=3.8,<3.9"
+readme = "README.md"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*", "dxGame*", "task_list*", "public*"]

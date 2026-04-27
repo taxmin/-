@@ -1,0 +1,20 @@
+================================================================================
+  可选：NVIDIA 显卡 + CUDA 11.8 环境下安装 GPU 版 PyTorch（不走默认 requirements）
+================================================================================
+
+  默认 requirements.txt 已改为 CPU 版 torch / torchaudio / torchvision，便于镜像站安装、
+  以及在没有 NVIDIA 的机器上分发。
+
+  若你本机需要 GPU 加速，请在已激活的 .venv 中执行（需联网，且本机已装对应 CUDA 驱动）：
+
+    .venv\Scripts\python.exe -m pip install torch==2.4.1 torchvision==0.19.1 torchaudio==2.4.1 ^
+      --index-url https://download.pytorch.org/whl/cu118
+
+  若此前已装 CPU 版，建议先卸载再装：
+
+    .venv\Scripts\python.exe -m pip uninstall -y torch torchvision torchaudio
+    （然后执行上面一行）
+
+  说明：https://pytorch.org/get-started/locally/
+
+================================================================================
