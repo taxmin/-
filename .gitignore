@@ -60,7 +60,6 @@ encrypt_core_files_aes.py
 升级到AES-256.bat
 local_secret_key.py
 local_secret_key_test.py
-*.enc
 _encrypted/
 _encryption_keys/
 
