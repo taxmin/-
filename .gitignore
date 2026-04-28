@@ -109,3 +109,7 @@ Python38Portable/
 Lib/
 site-packages/
 *.dll
+Python38Portable/
+Lib/
+site-packages/
+*.dll
