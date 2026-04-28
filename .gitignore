@@ -43,7 +43,8 @@ Python38Portable/
 一键更新.bat
 开发模式.bat
 准备提交.bat
-_tools/dev_helper.bat
+tools/
+run.bat
 *.local
 *.local.json
 *.local.py
@@ -52,8 +53,16 @@ config_local.py
 core_strategy_local.py
 *_local.py
 检查敏感信息.bat
-_templates/
-_tools/local_secret_key.py
+# Encryption tools and sensitive files (do not commit)
+encrypt_core_files.py
+encrypt_core_files_aes.py
+加密解密工具.bat
+升级到AES-256.bat
+local_secret_key.py
+local_secret_key_test.py
+*.enc
+_encrypted/
+_encryption_keys/
 
 # Documentation files (do not commit)
 *.md
