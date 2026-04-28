@@ -89,6 +89,46 @@ echo [成功] 所有依赖安装完成！
 echo ============================================
 echo.
 
+REM 🔧 新增：检查并修复 dxpyd 模块导入问题
+echo [步骤3] 检查 dxpyd 模块完整性...
+echo.
+
+set "FIXED_DXPD=0"
+
+REM 检查 x64/__init__.py
+if not exist "dxGame\dx_lib\x64\__init__.py" (
+    echo [修复] 创建 dxGame\dx_lib\x64\__init__.py...
+    %PY_CMD% -c "import os; open('dxGame/dx_lib/x64/__init__.py', 'w', encoding='utf-8').write('''# -*- coding: utf-8 -*-\nimport sys, os\ncurrent_dir = os.path.dirname(__file__)\npython_version = f\"cp{sys.version_info.major}{sys.version_info.minor}\"\npyd_files = [f\"dxpyd.{python_version}-win_amd64.pyd\", \"dxpyd.cp39-win_amd64.pyd\", \"dxpyd.cp38-win_amd64.pyd\", \"dxpyd.cp312-win_amd64.pyd\"]\ndxpyd = None\nfor pyd_file in pyd_files:\n    pyd_path = os.path.join(current_dir, pyd_file)\n    if os.path.exists(pyd_path):\n        try:\n            import importlib.util\n            spec = importlib.util.spec_from_file_location(\"dxpyd\", pyd_path)\n            dxpyd = importlib.util.module_from_spec(spec)\n            spec.loader.exec_module(dxpyd)\n            print(f\"[OK] Loaded dxpyd: {pyd_file}\")\n            break\n        except Exception as e:\n            continue\nif dxpyd is None:\n    raise ImportError(f\"Cannot find compatible dxpyd for Python {python_version}\")\n''')"
+    if errorlevel 1 (
+        echo [警告] 自动创建 x64/__init__.py 失败
+    ) else (
+        echo [成功] 已创建 x64/__init__.py
+        set "FIXED_DXPD=1"
+    )
+) else (
+    echo [正常] x64/__init__.py 已存在
+)
+
+REM 检查 x86/__init__.py
+if not exist "dxGame\dx_lib\x86\__init__.py" (
+    echo [修复] 创建 dxGame\dx_lib\x86\__init__.py...
+    %PY_CMD% -c "import os; open('dxGame/dx_lib/x86/__init__.py', 'w', encoding='utf-8').write('''# -*- coding: utf-8 -*-\nimport sys, os\ncurrent_dir = os.path.dirname(__file__)\npython_version = f\"cp{sys.version_info.major}{sys.version_info.minor}\"\npyd_files = [f\"dxpyd.{python_version}-win32.pyd\", \"dxpyd.cp39-win32.pyd\", \"dxpyd.cp38-win32.pyd\"]\ndxpyd = None\nfor pyd_file in pyd_files:\n    pyd_path = os.path.join(current_dir, pyd_file)\n    if os.path.exists(pyd_path):\n        try:\n            import importlib.util\n            spec = importlib.util.spec_from_file_location(\"dxpyd\", pyd_path)\n            dxpyd = importlib.util.module_from_spec(spec)\n            spec.loader.exec_module(dxpyd)\n            print(f\"[OK] Loaded dxpyd (x86): {pyd_file}\")\n            break\n        except Exception as e:\n            continue\nif dxpyd is None:\n    raise ImportError(f\"Cannot find compatible dxpyd (x86) for Python {python_version}\")\n''')"
+    if errorlevel 1 (
+        echo [警告] 自动创建 x86/__init__.py 失败
+    ) else (
+        echo [成功] 已创建 x86/__init__.py
+        set "FIXED_DXPD=1"
+    )
+) else (
+    echo [正常] x86/__init__.py 已存在
+)
+
+echo.
+if "%FIXED_DXPD%"=="1" (
+    echo [提示] 已修复 dxpyd 模块问题，建议重新运行此脚本以确保完整安装
+    echo.
+)
+
 if exist "%~dp0check_ocr_env.py" (
     echo [步骤] 自动运行 OCR 环境检查...
     pushd "%~dp0" >nul
