@@ -2981,6 +2981,25 @@ class Task:
                         traceback.print_exc()
                         return False
 
+            def 修复游戏窗口界面():
+                res = for_ms_row(self.row, [MS.游戏左上角图标, MS.游戏左上角图标1])
+                if not res:
+                    res = for_ms_row(self.row, [MS.游戏运行图标])
+                    if res:
+                        移动点击(x+15, y+15, 0.5, pixel_verify=False)
+                        time.sleep(1)
+                        # 验证游戏左上角图标
+                        ress = wait_ms_row(self.row, [MS.游戏左上角图标, MS.游戏左上角图标1])
+                        if ress:
+                            print(f"[DEBUG] [修复游戏窗口界面] 找到游戏左上角图标")
+                            return True
+                        else:
+                            print(f"[DEBUG] [修复游戏窗口界面] 未找到游戏左上角图标")
+                            return False
+                else:
+                    print(f"[DEBUG] [修复游戏窗口界面] 未找到游戏左上角图标")
+                    return  True
+
             def 游戏窗口位置检查():
                 res, x, y = for_ms_row(self.row, [MS.游戏左上角图标, MS.游戏左上角图标1])
                 if res:
@@ -2998,7 +3017,7 @@ class Task:
                     res, x, y = for_ms_row(self.row, [MS.游戏运行图标])
                     if res:
                         print(f"找到游戏运行图标: {x}, {y}")
-                        移动点击(x+15, y+15)
+                        移动点击(x+15, y+15, 0.5, pixel_verify=False)
                         time.sleep(1)
                     else:
                         print("未找到游戏窗口位置,请检查游戏是否开启")
@@ -6058,19 +6077,33 @@ class Task:
                             continue
                         else:
                             print("疑似网络刷新问题")
+                            # 🔧 增强日志：记录尝试恢复游戏画面
+                            print(f"[Row:{self.row}] 🔄 尝试恢复游戏画面...")
                             res, x1, y1 = for_ms_row(self.row, [MS.游戏运行图标])
                             if res:
-                                print("找到游戏运行图标")
+                                print(f"[Row:{self.row}] ✅ 找到游戏运行图标 ({x1}, {y1})")
                                 移动点击(x1 + 15, y1 + 10, pixel_verify=False)
                                 time.sleep(1)
                                 移动点击(x1 + 15, y1 + 10)
                                 time.sleep(1)
+                                print(f"[Row:{self.row}] ⏳ 等待游戏左上角图标出现...")
                                 ress = wait_for_ms(self.row, [MS.游戏左上角图标], for_num=5, delay=0.5)
                                 if ress:
-                                    print("找到游戏左上角图标")
+                                    print(f"[Row:{self.row}] ✅ 成功恢复 - 找到游戏左上角图标")
                                     continue
                                 else:
+                                    print(f"[Row:{self.row}] ⚠️ 第一次恢复失败，再次尝试点击...")
                                     移动点击(x1 + 15, y1 + 10, pixel_verify=False)
+                                    time.sleep(1)
+                                    # 🔧 第二次验证
+                                    ress2 = wait_for_ms(self.row, [MS.游戏左上角图标], for_num=3, delay=0.5)
+                                    if ress2:
+                                        print(f"[Row:{self.row}] ✅ 第二次尝试成功 - 找到游戏左上角图标")
+                                        continue
+                                    else:
+                                        print(f"[Row:{self.row}] ❌ 游戏画面恢复失败，可能需要手动干预")
+                            else:
+                                print(f"[Row:{self.row}] ❌ 未找到游戏运行图标，VNC 截图可能失效")
                     # 如果在游戏中，则退出到登录界面
                     res, x, y = for_ms_row(self.row, [MS.登出])
                     if res:
@@ -6104,7 +6137,7 @@ class Task:
                                 print("未找到基础设置,快捷键alt+j")
 
                                 # 确保角色等级识别错误后，清空界面环境，esc
-                                self.dx.KM.PressKey('esc')
+                                安全按键('esc')
                                 time.sleep(0.5)
                                 组合按键('alt', 'j')
                                 time.sleep(1)
@@ -6119,7 +6152,7 @@ class Task:
                                     if 关闭窗口():
                                         print("检测到游戏内窗口界面")
                                     else:
-                                        self.dx.KM.PressKey('esc')
+                                        安全按键('esc')
                 return False
 
             def 选择区服(区服):
