@@ -41,6 +41,9 @@ Python38Portable/
 
 # Local developer scripts and configs (do not commit)
 一键更新.bat
+开发模式.bat
+准备提交.bat
+_tools/dev_helper.bat
 *.local
 *.local.json
 *.local.py
@@ -51,6 +54,10 @@ core_strategy_local.py
 检查敏感信息.bat
 _templates/
 _tools/local_secret_key.py
+
+# Documentation files (do not commit)
+*.md
+!README.md  # 如果项目根目录有主README可以保留，否则删除此行
 
 # Logs and temporary files
 *.log
