@@ -59,6 +59,9 @@ _tools/local_secret_key.py
 *.md
 !README.md  # 如果项目根目录有主README可以保留，否则删除此行
 
+# Test files (do not commit)
+test_*.py
+
 # Logs and temporary files
 *.log
 logs/
