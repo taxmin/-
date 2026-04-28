@@ -89,7 +89,7 @@ echo [成功] 所有依赖安装完成！
 echo ============================================
 echo.
 
-REM 🔧 新增：检查并修复 dxpyd 模块导入问题
+REM 🔧 检查并修复 dxpyd 模块导入问题（从本地模板复制）
 echo [步骤3] 检查 dxpyd 模块完整性...
 echo.
 
@@ -97,13 +97,19 @@ set "FIXED_DXPD=0"
 
 REM 检查 x64/__init__.py
 if not exist "dxGame\dx_lib\x64\__init__.py" (
-    echo [修复] 创建 dxGame\dx_lib\x64\__init__.py...
-    %PY_CMD% -c "import os; open('dxGame/dx_lib/x64/__init__.py', 'w', encoding='utf-8').write('''# -*- coding: utf-8 -*-\nimport sys, os\ncurrent_dir = os.path.dirname(__file__)\npython_version = f\"cp{sys.version_info.major}{sys.version_info.minor}\"\npyd_files = [f\"dxpyd.{python_version}-win_amd64.pyd\", \"dxpyd.cp39-win_amd64.pyd\", \"dxpyd.cp38-win_amd64.pyd\", \"dxpyd.cp312-win_amd64.pyd\"]\ndxpyd = None\nfor pyd_file in pyd_files:\n    pyd_path = os.path.join(current_dir, pyd_file)\n    if os.path.exists(pyd_path):\n        try:\n            import importlib.util\n            spec = importlib.util.spec_from_file_location(\"dxpyd\", pyd_path)\n            dxpyd = importlib.util.module_from_spec(spec)\n            spec.loader.exec_module(dxpyd)\n            print(f\"[OK] Loaded dxpyd: {pyd_file}\")\n            break\n        except Exception as e:\n            continue\nif dxpyd is None:\n    raise ImportError(f\"Cannot find compatible dxpyd for Python {python_version}\")\n''')"
-    if errorlevel 1 (
-        echo [警告] 自动创建 x64/__init__.py 失败
+    if exist "_templates\dx_lib_x64_init.py" (
+        echo [修复] 从模板复制 dxGame\dx_lib\x64\__init__.py...
+        copy /Y "_templates\dx_lib_x64_init.py" "dxGame\dx_lib\x64\__init__.py" >nul
+        if errorlevel 1 (
+            echo [警告] 复制 x64/__init__.py 失败
+        ) else (
+            echo [成功] 已创建 x64/__init__.py
+            set "FIXED_DXPD=1"
+        )
     ) else (
-        echo [成功] 已创建 x64/__init__.py
-        set "FIXED_DXPD=1"
+        echo [警告] 未找到模板文件 _templates\dx_lib_x64_init.py
+        echo [提示] 请从开发者获取 _templates 目录并放到项目根目录
+        echo [提示] 或者手动创建 dxGame\dx_lib\x64\__init__.py 文件
     )
 ) else (
     echo [正常] x64/__init__.py 已存在
@@ -111,13 +117,19 @@ if not exist "dxGame\dx_lib\x64\__init__.py" (
 
 REM 检查 x86/__init__.py
 if not exist "dxGame\dx_lib\x86\__init__.py" (
-    echo [修复] 创建 dxGame\dx_lib\x86\__init__.py...
-    %PY_CMD% -c "import os; open('dxGame/dx_lib/x86/__init__.py', 'w', encoding='utf-8').write('''# -*- coding: utf-8 -*-\nimport sys, os\ncurrent_dir = os.path.dirname(__file__)\npython_version = f\"cp{sys.version_info.major}{sys.version_info.minor}\"\npyd_files = [f\"dxpyd.{python_version}-win32.pyd\", \"dxpyd.cp39-win32.pyd\", \"dxpyd.cp38-win32.pyd\"]\ndxpyd = None\nfor pyd_file in pyd_files:\n    pyd_path = os.path.join(current_dir, pyd_file)\n    if os.path.exists(pyd_path):\n        try:\n            import importlib.util\n            spec = importlib.util.spec_from_file_location(\"dxpyd\", pyd_path)\n            dxpyd = importlib.util.module_from_spec(spec)\n            spec.loader.exec_module(dxpyd)\n            print(f\"[OK] Loaded dxpyd (x86): {pyd_file}\")\n            break\n        except Exception as e:\n            continue\nif dxpyd is None:\n    raise ImportError(f\"Cannot find compatible dxpyd (x86) for Python {python_version}\")\n''')"
-    if errorlevel 1 (
-        echo [警告] 自动创建 x86/__init__.py 失败
+    if exist "_templates\dx_lib_x86_init.py" (
+        echo [修复] 从模板复制 dxGame\dx_lib\x86\__init__.py...
+        copy /Y "_templates\dx_lib_x86_init.py" "dxGame\dx_lib\x86\__init__.py" >nul
+        if errorlevel 1 (
+            echo [警告] 复制 x86/__init__.py 失败
+        ) else (
+            echo [成功] 已创建 x86/__init__.py
+            set "FIXED_DXPD=1"
+        )
     ) else (
-        echo [成功] 已创建 x86/__init__.py
-        set "FIXED_DXPD=1"
+        echo [警告] 未找到模板文件 _templates\dx_lib_x86_init.py
+        echo [提示] 请从开发者获取 _templates 目录并放到项目根目录
+        echo [提示] 或者手动创建 dxGame\dx_lib\x86\__init__.py 文件
     )
 ) else (
     echo [正常] x86/__init__.py 已存在

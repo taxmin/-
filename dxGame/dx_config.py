@@ -157,6 +157,9 @@ class ConfigHandler:
         with self._io_lock:
             self.config.read(self.path, encoding='utf-8')
             self.data = self.config.data
+            
+            # 🔧 加载本地配置（如果存在）
+            self._load_local_config()
 
     def 写入本地配置文件(self):
         """
@@ -197,6 +200,55 @@ class ConfigHandler:
                 data += f"\t{key} = {value}\n"
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(data)
+    
+    def _load_local_config(self):
+        """
+        加载本地配置文件（不会被提交到 Git）
+        优先级：config_local.py > config.local.py
+        """
+        import sys
+        import os
+        
+        # 获取项目根目录
+        project_root = os.path.dirname(os.path.dirname(__file__))
+        
+        # 尝试加载 config_local.py
+        local_config_paths = [
+            os.path.join(project_root, 'config_local.py'),
+            os.path.join(project_root, 'config.local.py'),
+        ]
+        
+        for config_path in local_config_paths:
+            if os.path.exists(config_path):
+                try:
+                    # 动态导入
+                    spec = importlib.util.spec_from_file_location("config_local", config_path)
+                    local_config = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(local_config)
+                    
+                    # 合并配置
+                    if hasattr(local_config, 'VNC_PORT_MAPPING'):
+                        self.data.setdefault('vnc_config', {})
+                        self.data['vnc_config']['port_mapping'] = local_config.VNC_PORT_MAPPING
+                    
+                    if hasattr(local_config, 'ACCOUNT_CONFIG'):
+                        self.data.setdefault('account_config', {})
+                        self.data['account_config'].update(local_config.ACCOUNT_CONFIG)
+                    
+                    if hasattr(local_config, 'CUSTOM_TASK_SEQUENCE'):
+                        self.data.setdefault('task_config', {})
+                        self.data['task_config'].update(local_config.CUSTOM_TASK_SEQUENCE)
+                    
+                    print(f"[OK] 已加载本地配置: {os.path.basename(config_path)}")
+                    return
+                except Exception as e:
+                    print(f"[WARN] 加载本地配置失败: {e}")
+                    continue
+        
+        # 如果没有本地配置，提示用户
+        example_path = os.path.join(project_root, 'config_local.example.py')
+        if os.path.exists(example_path):
+            print(f"[INFO] 未找到本地配置，复制 config_local.example.py 为 config_local.py 并填写实际值")
 
     def 添加(self, section, key, value):
         self.data.setdefault(section, {})[key] = value

@@ -43,7 +43,14 @@ Python38Portable/
 一键更新.bat
 *.local
 *.local.json
+*.local.py
 config.local.py
+config_local.py
+core_strategy_local.py
+*_local.py
+检查敏感信息.bat
+_templates/
+_tools/local_secret_key.py
 
 # Logs and temporary files
 *.log
