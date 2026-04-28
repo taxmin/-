@@ -923,23 +923,53 @@ class Window:
             logging.error("激活窗口失败：句柄无效")
             return False
         
+        # 🔧 验证窗口句柄有效性
+        try:
+            import ctypes.wintypes
+            if not user32.IsWindow(hwnd):
+                logging.error(f"激活窗口失败：句柄 {hwnd} 已失效")
+                return False
+        except Exception as e:
+            logging.error(f"验证窗口句柄异常: {e}")
+            return False
+        
         try:
             # 如果窗口最小化，先恢复
-            if user32.IsIconic(hwnd):
-                user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+            try:
+                if user32.IsIconic(hwnd):
+                    user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+            except OSError as e:
+                logging.error(f"⚠️ IsIconic/ShowWindow 调用失败 (OSError): {e}")
+                return False
             
             # 将窗口置前
-            user32.SetForegroundWindow(hwnd)
-            user32.BringWindowToTop(hwnd)
+            try:
+                user32.SetForegroundWindow(hwnd)
+                user32.BringWindowToTop(hwnd)
+            except OSError as e:
+                logging.error(f"⚠️ SetForegroundWindow/BringWindowToTop 调用失败 (OSError): {e}")
+                return False
             
             # 设置焦点
-            user32.SetFocus(hwnd)
+            try:
+                user32.SetFocus(hwnd)
+            except OSError as e:
+                logging.error(f"⚠️ SetFocus 调用失败 (OSError): {e}")
+                # 即使 SetFocus 失败，窗口可能已经激活，继续返回 True
             
             logging.debug(f"✓ 窗口 {hwnd} 已激活")
             return True
             
+        except MemoryError as e:
+            logging.error(f"❌ 激活窗口内存错误: {e}")
+            return False
+        except WindowsError as e:
+            logging.error(f"❌ 激活窗口 Windows API 错误: {e}")
+            return False
         except Exception as e:
             logging.error(f"激活窗口 {hwnd} 失败: {e}")
+            import traceback
+            logging.debug(traceback.format_exc())
             return False
     
     @staticmethod
@@ -1071,8 +1101,32 @@ class Window:
             # 转换为 numpy 数组
             bmi = ctypes.create_string_buffer(40)
             gdi32.GetObjectW(hbitmap, 40, bmi)
-            bits = ctypes.create_string_buffer(int(buffer_size))  # 🔧 确保是标准 int
-            gdi32.GetDIBits(hdc_mem, hbitmap, 0, int(height), bits, bmi, 0)
+            
+            # 🔧 关键修复：为第一次 GetDIBits 增加异常保护
+            try:
+                bits = ctypes.create_string_buffer(int(buffer_size))
+                result = gdi32.GetDIBits(hdc_mem, hbitmap, 0, int(height), bits, bmi, 0)
+                if result == 0:
+                    logging.error(f"⚠️ GetDIBits (第一次) 返回 0，可能窗口已关闭")
+                    gdi32.DeleteObject(hbitmap)
+                    gdi32.DeleteDC(hdc_mem)
+                    user32.ReleaseDC(hwnd_obj, hdc_screen)
+                    return False
+            except OSError as e:
+                logging.error(f"❌ GetDIBits (第一次) 调用失败 (OSError): {e}")
+                gdi32.DeleteObject(hbitmap)
+                gdi32.DeleteDC(hdc_mem)
+                user32.ReleaseDC(hwnd_obj, hdc_screen)
+                return False
+            except Exception as e:
+                logging.error(f"❌ GetDIBits (第一次) 异常: {e}")
+                import traceback
+                logging.debug(traceback.format_exc())
+                gdi32.DeleteObject(hbitmap)
+                gdi32.DeleteDC(hdc_mem)
+                user32.ReleaseDC(hwnd_obj, hdc_screen)
+                return False
+            
             img1 = np.frombuffer(bits, dtype=np.uint8).reshape((int(height), int(width), 4))
             
             # 清理 GDI 资源
@@ -1127,8 +1181,31 @@ class Window:
                 user32.ReleaseDC(hwnd_obj, hdc_screen)
                 return False
             
-            bits = ctypes.create_string_buffer(int(buffer_size))  # 🔧 确保是标准 int
-            gdi32.GetDIBits(hdc_mem, hbitmap, 0, int(height), bits, bmi, 0)
+            # 🔧 关键修复：为 GetDIBits 增加异常保护（防止访问违规）
+            try:
+                bits = ctypes.create_string_buffer(int(buffer_size))
+                result = gdi32.GetDIBits(hdc_mem, hbitmap, 0, int(height), bits, bmi, 0)
+                if result == 0:
+                    logging.error(f"⚠️ GetDIBits (第二次) 返回 0，可能窗口已关闭")
+                    gdi32.DeleteObject(hbitmap)
+                    gdi32.DeleteDC(hdc_mem)
+                    user32.ReleaseDC(hwnd_obj, hdc_screen)
+                    return False
+            except OSError as e:
+                logging.error(f"❌ GetDIBits (第二次) 调用失败 (OSError): {e}")
+                gdi32.DeleteObject(hbitmap)
+                gdi32.DeleteDC(hdc_mem)
+                user32.ReleaseDC(hwnd_obj, hdc_screen)
+                return False
+            except Exception as e:
+                logging.error(f"❌ GetDIBits (第二次) 异常: {e}")
+                import traceback
+                logging.debug(traceback.format_exc())
+                gdi32.DeleteObject(hbitmap)
+                gdi32.DeleteDC(hdc_mem)
+                user32.ReleaseDC(hwnd_obj, hdc_screen)
+                return False
+            
             img2 = np.frombuffer(bits, dtype=np.uint8).reshape((int(height), int(width), 4))
             
             # 清理 GDI 资源
@@ -1144,6 +1221,12 @@ class Window:
                 logging.debug(f"✓ 窗口 {hwnd_obj.value} 正常运行")
                 return False
                 
+        except MemoryError as e:
+            logging.error(f"❌ CheckWindowFrozen 内存错误: {e}")
+            return False
+        except WindowsError as e:
+            logging.error(f"❌ CheckWindowFrozen Windows API 错误: {e}")
+            return False
         except Exception as e:
             import traceback
             # 🔧 屏蔽 OverflowError 日志（窗口尺寸异常时频繁触发，属于正常情况）

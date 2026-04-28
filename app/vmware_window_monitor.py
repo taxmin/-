@@ -63,10 +63,17 @@ def _physical_mouse_click(hwnd, x1=191, y1=229, x2=739, y2=561):
             logger.warning(f"⚠️ 窗口句柄 {hwnd} 已失效，无法执行物理点击")
             return False
         
-        # 获取窗口位置
-        rect = ctypes.wintypes.RECT()
-        if not ctypes.windll.user32.GetWindowRect(hwnd, ctypes.byref(rect)):
-            logger.error(f"❌ 获取窗口位置失败: {ctypes.get_last_error()}")
+        # 🔧 获取窗口位置（增加异常保护）
+        try:
+            rect = ctypes.wintypes.RECT()
+            if not ctypes.windll.user32.GetWindowRect(hwnd, ctypes.byref(rect)):
+                logger.error(f"❌ 获取窗口位置失败: {ctypes.get_last_error()}")
+                return False
+        except OSError as e:
+            logger.error(f"❌ GetWindowRect 调用失败（窗口可能已关闭）: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"❌ 获取窗口位置异常: {e}")
             return False
         
         # 计算窗口左上角坐标
@@ -112,6 +119,12 @@ def _physical_mouse_click(hwnd, x1=191, y1=229, x2=739, y2=561):
         
         return True
         
+    except MemoryError as e:
+        logger.error(f"❌ 内存访问错误: {e}")
+        return False
+    except WindowsError as e:
+        logger.error(f"❌ Windows API 错误: {e}")
+        return False
     except Exception as e:
         logger.error(f"❌ 物理鼠标点击异常: {e}")
         import traceback
@@ -189,11 +202,23 @@ def _check_and_recover_window(row, port):
         bool: 是否执行了恢复操作
     """
     try:
+        # 🔧 关键修复：在整个恢复过程中增加全局异常保护
+        import ctypes.wintypes
+        
         # 1. 查找真实游戏窗口句柄（多层级查找）
         real_hwnd = Window.FindVMwareRealWindowByPort(port)
         
         if not real_hwnd:
             logger.warning(f"[Row:{row}] 未找到端口 {port} 的真实游戏窗口")
+            return False
+        
+        # 🔧 立即验证窗口句柄有效性
+        try:
+            if not ctypes.windll.user32.IsWindow(real_hwnd):
+                logger.error(f"[Row:{row}] ❌ 窗口句柄 {real_hwnd} 已失效，中止检查")
+                return False
+        except Exception as e:
+            logger.error(f"[Row:{row}] ❌ 窗口句柄验证异常: {e}")
             return False
         
         # 2. 快速检查真实窗口是否卡住（使用较短的超时时间以避免阻塞）
@@ -254,20 +279,37 @@ def _check_and_recover_window(row, port):
             # 🔧 标记窗口正在恢复中
             _window_recovering[row] = time.time()
             
+            # 🔧 关键修复：再次验证窗口句柄有效性（防止在检查和激活之间窗口被关闭）
+            try:
+                import ctypes.wintypes
+                if not ctypes.windll.user32.IsWindow(real_hwnd):
+                    logger.error(f"[Row:{row}] ❌ 窗口句柄 {real_hwnd} 已失效，中止恢复操作")
+                    _window_recovering.pop(row, None)
+                    return False
+            except Exception as e:
+                logger.error(f"[Row:{row}] ❌ 窗口句柄验证异常: {e}")
+                _window_recovering.pop(row, None)
+                return False
+            
             # 3. 激活真实窗口
             success = Window.ActivateWindow(real_hwnd)
             
             if success:
                 logger.info(f"[Row:{row}] ✓ 真实窗口 {real_hwnd} (端口:{port}) 已激活恢复")
                 
-                # 🔧 关键修复：使用物理鼠标点击唤醒虚拟机窗口
-                logger.info(f"[Row:{row}] 🖱️ 执行物理鼠标点击以唤醒虚拟机...")
-                click_success = _physical_mouse_click(real_hwnd, x1=191, y1=229, x2=739, y2=561)
-                
-                if click_success:
-                    logger.info(f"[Row:{row}] ✓ 物理点击成功，等待窗口完全激活...")
-                else:
-                    logger.warning(f"[Row:{row}] ⚠️ 物理点击失败，继续尝试后续恢复步骤")
+                # 🔧 关键修复：使用物理鼠标点击唤醒虚拟机窗口（增加异常保护）
+                try:
+                    logger.info(f"[Row:{row}] 🖱️ 执行物理鼠标点击以唤醒虚拟机...")
+                    click_success = _physical_mouse_click(real_hwnd, x1=191, y1=229, x2=739, y2=561)
+                    
+                    if click_success:
+                        logger.info(f"[Row:{row}] ✓ 物理点击成功，等待窗口完全激活...")
+                    else:
+                        logger.warning(f"[Row:{row}] ⚠️ 物理点击失败，继续尝试后续恢复步骤")
+                except Exception as e:
+                    logger.error(f"[Row:{row}] ❌ 物理鼠标点击异常: {e}")
+                    import traceback
+                    logger.debug(traceback.format_exc())
                 
                 # 🔧 等待更长时间，确保其他线程的 KM 操作完成
                 time.sleep(3)
@@ -403,10 +445,19 @@ def _check_and_recover_window(row, port):
             logger.debug(f"[Row:{row}] ✓ 真实窗口 {real_hwnd} (端口:{port}) 正常运行")
             return False
             
+    except MemoryError as e:
+        logger.error(f"[Row:{row}] ❌ 窗口恢复内存错误: {e}")
+        _window_recovering.pop(row, None)
+        return False
+    except WindowsError as e:
+        logger.error(f"[Row:{row}] ❌ 窗口恢复 Windows API 错误: {e}")
+        _window_recovering.pop(row, None)
+        return False
     except Exception as e:
         logger.error(f"[Row:{row}] 检查和恢复窗口失败: {e}")
         import traceback
         logger.debug(traceback.format_exc())
+        _window_recovering.pop(row, None)
         return False
 
 

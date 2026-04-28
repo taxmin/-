@@ -77,8 +77,13 @@ class Controller:
                 self.ui.tk_table_m1ap2ahd.insert("", "end", values=row_data)
                 self.update_table_data(i, 表格_任务, 任务列表.get(ip,""))  # 设置默认任务
         # 根据多少行自动设置表格高度
-        width = user32.GetSystemMetrics(0)  # 获取屏幕宽度
-        height = user32.GetSystemMetrics(1)  # 获取屏幕高度
+        try:
+            width = user32.GetSystemMetrics(0)  # 获取屏幕宽度
+            height = user32.GetSystemMetrics(1)  # 获取屏幕高度
+        except Exception as e:
+            import logging
+            logging.warning(f"⚠️ 获取屏幕尺寸失败: {e}，使用默认值")
+            width, height = 1920, 1080  # 使用默认值
         screenwidth, screenheight = self.ui.winfo_width(), self.ui.winfo_height()
         if 账号列表:
             n = len(账号列表)

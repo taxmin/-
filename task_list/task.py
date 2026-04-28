@@ -3547,8 +3547,47 @@ class Task:
                     return False
 
             def 组合按键(按键1, 按键2):
-                self.dx.KM.hot_key([按键1, 按键2])
-                print(f"组合按键: {按键1}, {按键2}")
+                # 🔧 关键修复：使用 KM 锁 + 异常保护
+                from app.vmware_window_monitor import get_km_lock
+                km_lock = get_km_lock(self.row)
+                
+                with km_lock:
+                    try:
+                        self.dx.KM.hot_key([按键1, 按键2])
+                        print(f"组合按键: {按键1}, {按键2}")
+                    except OSError as e:
+                        print(f"⚠️ [Row:{self.row}] 组合按键失败 (OSError): {e}")
+                        return False
+                    except Exception as e:
+                        print(f"⚠️ [Row:{self.row}] 组合按键异常: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return False
+                return True
+            
+            def 安全按键(key_name):
+                """
+                安全地发送按键（带锁和异常保护）
+                
+                Args:
+                    key_name: 按键名称，如 'esc', 'enter' 等
+                
+                Returns:
+                    bool: 是否成功
+                """
+                from app.vmware_window_monitor import get_km_lock
+                km_lock = get_km_lock(self.row)
+                
+                with km_lock:
+                    try:
+                        self.dx.KM.PressKey(key_name)
+                        return True
+                    except OSError as e:
+                        print(f"⚠️ [Row:{self.row}] 按键 {key_name} 失败 (OSError): {e}")
+                        return False
+                    except Exception as e:
+                        print(f"⚠️ [Row:{self.row}] 按键 {key_name} 异常: {e}")
+                        return False
 
             def 请选择 ():
                 while True:
@@ -3676,7 +3715,7 @@ class Task:
                                                         else:
                                                             break
                                                         if time.time() - start_time > 60:
-                                                            self.dx.KM.PressKey('esc')
+                                                            安全按键('esc')
                                                             break
                                                     continue
                                                 else:
@@ -3694,7 +3733,7 @@ class Task:
                                                                     break
                                                         else:
                                                             # 按键esc退出
-                                                            self.dx.KM.PressKey('esc')
+                                                            安全按键('esc')
                                                             time.sleep(1)
                                                             return True
                                                     else:
@@ -3737,7 +3776,7 @@ class Task:
                                             time.sleep(1)
                                         else:
                                             # 按键esc退出
-                                            self.dx.KM.PressKey('esc')
+                                            安全按键('esc')
                                             time.sleep(1)
                                             return True
                                         time.sleep(1)
@@ -3747,7 +3786,7 @@ class Task:
                             res, x, y = for_ms_row(self.row, [MS.福利界面])
                             if res:
                                 # 按键esc退出
-                                self.dx.KM.PressKey('esc')
+                                安全按键('esc')
                             else:
                                 组合按键('alt', 'e')
                                 time.sleep(1)

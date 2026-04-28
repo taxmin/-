@@ -597,7 +597,12 @@ class WinGUI(Tk):
                 return
             
             hidden_count = 0
-            screen_width = ctypes.windll.user32.GetSystemMetrics(0)  # 获取屏幕宽度
+            try:
+                screen_width = ctypes.windll.user32.GetSystemMetrics(0)  # 获取屏幕宽度
+            except Exception as e:
+                import logging
+                logging.warning(f"⚠️ 获取屏幕宽度失败: {e}，使用默认值 1920")
+                screen_width = 1920
             
             for port in ports:
                 try:
